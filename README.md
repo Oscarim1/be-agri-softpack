@@ -102,7 +102,7 @@ Aquí puedes explorar y probar todos los endpoints.
 
 ## 👨‍💻 Autor
 
-Desarrollado por **Oscar Reyes** como parte del proyecto de sistema agrícola realizado por **Softpack**.
+Desarrollado por **Oscar Reyes** como parte del proyecto de sistema agrícola realizado por **Softpack.cl**.
 
 ---
 
