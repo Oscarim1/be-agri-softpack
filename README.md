@@ -53,9 +53,11 @@ cp .env.example .env
 ### 🔑 Archivo `.env` de ejemplo
 
 ```
-PORT=3000
-DATABASE_URL=mysql://usuario:password@localhost:3306/nombre_db
-JWT_SECRET=supersecreto123
+DB_HOST=mysql://usuario:password@localhost:3306/nombre_db
+DB_USER=user
+DB_PASSWORD=pass
+DB_NAME=nombre db
+JWT_SECRET=secreto_super_seguro
 ```
 
 ---
@@ -100,7 +102,7 @@ Aquí puedes explorar y probar todos los endpoints.
 
 ## 👨‍💻 Autor
 
-Desarrollado por **Oscar Reyes** como parte del proyecto de sistema agrícola.
+Desarrollado por **Oscar Reyes** como parte del proyecto de sistema agrícola realizado por **Softpack**.
 
 ---
 
