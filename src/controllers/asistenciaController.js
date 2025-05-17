@@ -239,3 +239,7 @@ export const exportarPDFReporteMensual = async (req, res) => {
     res.status(500).json({ message: 'Error al generar el PDF del reporte mensual' });
   }
 };
+
+
+
+
