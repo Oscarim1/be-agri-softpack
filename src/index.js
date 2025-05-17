@@ -12,12 +12,15 @@ import contratistaRoutes from './routes/contratistaRoutes.js';
 import contratoRoutes from './routes/contratoRoutes.js';
 import contratoTrabajadorRoutes from './routes/contratoTrabajadorRoutes.js';
 import liquidacionRoutes from './routes/liquidacionRoutes.js';
-
+import setupSwagger from './config/swagger.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const app = express();
+
+setupSwagger(app);
+
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
