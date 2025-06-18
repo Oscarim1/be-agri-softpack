@@ -95,7 +95,8 @@ export const refreshToken = async (req, res) => {
     if (tokens.length === 0)
       return res.status(403).json({ message: 'Refresh token inválido o revocado' });
 
-    const nuevoAccessToken = generarAccessToken({ id: decoded.id, rol: decoded.rol });
+    const [[usuario]] = await pool.query('SELECT rol FROM usuarios WHERE id = ?', [decoded.id]);
+    const nuevoAccessToken = generarAccessToken({ id: decoded.id, rol: usuario?.rol });
     res.json({ accessToken: nuevoAccessToken });
   } catch (err) {
     console.error(err);
