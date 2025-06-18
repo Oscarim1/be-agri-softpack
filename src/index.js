@@ -12,6 +12,7 @@ import contratistaRoutes from './routes/contratistaRoutes.js';
 import contratoRoutes from './routes/contratoRoutes.js';
 import contratoTrabajadorRoutes from './routes/contratoTrabajadorRoutes.js';
 import liquidacionRoutes from './routes/liquidacionRoutes.js';
+import pulseraRoutes from './routes/pulseraRoutes.js';
 import setupSwagger from './config/swagger.js';
 import dotenv from 'dotenv';
 
@@ -36,6 +37,7 @@ app.use('/api/contratistas', contratistaRoutes);
 app.use('/api/contratos', contratoRoutes);
 app.use('/api/contratos-trabajador', contratoTrabajadorRoutes);
 app.use('/api/liquidaciones', liquidacionRoutes);
+app.use('/api/pulsera', pulseraRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

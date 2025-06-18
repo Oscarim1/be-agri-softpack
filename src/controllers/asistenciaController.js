@@ -1,19 +1,49 @@
 import { pool } from '../config/db.js';
 import { generarPDFReporteAsistencia } from '../services/pdfService.js';
 
-const obtenerAsistenciaActual = async (pulsera_uuid) => {
-  const [rows] = await pool.query(
-    `SELECT * FROM asistencias WHERE pulsera_uuid = ? AND DATE(horario_entrada) = CURDATE()`,
-    [pulsera_uuid]
-  );
-  return rows[0];
+export const obtenerAsistenciaActual = async (req, res) => {
+  try {
+    const { pulsera_uuid } = req.params;
+
+    // Validación básica
+    if (!pulsera_uuid || typeof pulsera_uuid !== 'string') {
+      return res
+        .status(400)
+        .json({ message: 'Parámetro pulsera_uuid inválido o ausente.' });
+    }
+
+    // Consulta directa en el controlador
+    const [rows] = await pool.query(
+      `SELECT * 
+         FROM asistencias 
+        WHERE pulsera_uuid = ? 
+          AND DATE(horario_entrada) = CURDATE()`,
+      [pulsera_uuid]
+    );
+
+    const asistencia = rows[0];
+
+    if (!asistencia) {
+      return res
+        .status(404)
+        .json({ message: 'No se encontró asistencia para hoy.' });
+    }
+
+    return res.json(asistencia);
+
+  } catch (error) {
+    console.error('Error al obtener asistencia actual:', error);
+    return res
+      .status(500)
+      .json({ message: 'Error interno al consultar la base de datos.' });
+  }
 };
 
 export const marcarAsistencia = async (req, res) => {
   const { pulsera_uuid, tipo } = req.body;
-
-  if (!pulsera_uuid || !tipo)
+  if (!pulsera_uuid || !tipo) {
     return res.status(400).json({ message: 'Pulsera y tipo de marca requeridos' });
+  }
 
   const campos = {
     entrada: 'horario_entrada',
@@ -21,9 +51,10 @@ export const marcarAsistencia = async (req, res) => {
     entrada_colacion: 'horario_entrada_colacion',
     salida: 'horario_salida'
   };
-
   const campo = campos[tipo];
-  if (!campo) return res.status(400).json({ message: 'Tipo de marca inválido' });
+  if (!campo) {
+    return res.status(400).json({ message: 'Tipo de marca inválido' });
+  }
 
   try {
     // 1. Verifica que la pulsera esté activa
@@ -31,18 +62,31 @@ export const marcarAsistencia = async (req, res) => {
       `SELECT estado FROM pulseras WHERE uuid = ?`,
       [pulsera_uuid]
     );
-
-    if (pulseraRows.length === 0)
+    if (pulseraRows.length === 0) {
       return res.status(404).json({ message: 'Pulsera no registrada en el sistema' });
-
-    if (pulseraRows[0].estado !== 'activa')
+    }
+    if (pulseraRows[0].estado !== 'activa') {
       return res.status(403).json({ message: 'Pulsera inactiva. No se puede registrar asistencia.' });
+    }
 
-    // 2. Busca asistencia existente
-    const asistencia = await obtenerAsistenciaActual(pulsera_uuid);
+    // 2. Busca asistencia existente para hoy (inline, sin servicio)
+    let asistencia;
+    try {
+      const [rows] = await pool.query(
+        `SELECT * FROM asistencias WHERE pulsera_uuid = ? AND DATE(horario_entrada) = CURDATE()`,
+        [pulsera_uuid]
+      );
+      asistencia = rows[0]; // undefined si no hay
+    } catch (err) {
+      console.error('Error al obtener asistencia actual:', err);
+      return res.status(500).json({ message: 'Error al obtener asistencia actual' });
+    }
 
+    // 3. Lógica de marcas
     if (!asistencia && tipo !== 'entrada') {
-      return res.status(404).json({ message: 'No se puede registrar esta marca sin haber marcado entrada primero' });
+      return res.status(404).json({
+        message: 'No se puede registrar esta marca sin haber marcado entrada primero'
+      });
     }
 
     if (!asistencia && tipo === 'entrada') {
@@ -54,18 +98,20 @@ export const marcarAsistencia = async (req, res) => {
     }
 
     if (asistencia[campo]) {
-      return res.status(409).json({ message: `Ya existe una marca de tipo '${tipo}' para hoy` });
+      return res.status(409).json({
+        message: `Ya existe una marca de tipo '${tipo}' para hoy`
+      });
     }
 
     await pool.query(
       `UPDATE asistencias SET ${campo} = NOW() WHERE id = ?`,
       [asistencia.id]
     );
+    return res.json({ message: `Marca de '${tipo}' registrada correctamente` });
 
-    res.json({ message: `Marca de '${tipo}' registrada correctamente` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Error al registrar asistencia' });
+    return res.status(500).json({ message: 'Error al registrar asistencia' });
   }
 };
 

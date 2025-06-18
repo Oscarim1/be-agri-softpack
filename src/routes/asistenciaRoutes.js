@@ -1,8 +1,9 @@
 import express from 'express';
 import { 
     marcarAsistencia,
+    obtenerAsistenciaActual,
     reporteMensualAsistencia,
-    exportarPDFReporteMensual  
+    exportarPDFReporteMensual
 } from '../controllers/asistenciaController.js';
 import { verificarToken } from '../middlewares/authMiddleware.js';
 
@@ -11,6 +12,7 @@ const router = express.Router();
 router.use(verificarToken);
 
 // Ruta única para registrar cualquier tipo de marca
+router.get('/actual/:pulsera_uuid', obtenerAsistenciaActual);
 router.post('/', marcarAsistencia);
 router.get('/reporte-mensual/:pulsera_uuid', reporteMensualAsistencia);
 router.get('/reporte-mensual/:pulsera_uuid/pdf', exportarPDFReporteMensual);
@@ -144,4 +146,41 @@ export default router;
  *         description: Trabajador no encontrado
  *       500:
  *         description: Error al generar PDF
+ */
+/**
+ * @swagger
+ * /asistencia/actual/{pulsera_uuid}:
+ *   get:
+ *     summary: Obtener la asistencia de hoy para una pulsera
+ *     tags: [Asistencia]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: pulsera_uuid
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: "abc123-def456"
+ *     responses:
+ *       200:
+ *         description: Objeto de asistencia del día
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 pulsera_uuid:
+ *                   type: string
+ *                 tipo:
+ *                   type: string
+ *                 horario_entrada:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: No se encontró asistencia para hoy.
+ *       500:
+ *         description: Error interno del servidor.
  */
