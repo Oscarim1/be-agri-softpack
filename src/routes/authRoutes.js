@@ -3,7 +3,9 @@ import {
   login,
   register,
   refreshToken,
-  logout
+  logout,
+  sendRecoveryCode,
+  resetPassword
 } from '../controllers/authController.js';
 
 const router = express.Router();
@@ -12,6 +14,8 @@ router.post('/login', login);
 router.post('/register', register);
 router.post('/refresh', refreshToken);
 router.post('/logout', logout);
+router.post('/forgot-password', sendRecoveryCode);
+router.post('/reset-password', resetPassword);
 
 export default router;
 
@@ -114,6 +118,71 @@ export default router;
  *         description: Faltan campos obligatorios
  *       409:
  *         description: El correo ya está registrado
+ *       500:
+ *         description: Error del servidor
+ */
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Solicitar código de recuperación
+ *     tags: [Auth]
+ *     requestBody:
+ *       description: Correo registrado del usuario
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - correo
+ *             properties:
+ *               correo:
+ *                 type: string
+ *                 example: usuario@correo.com
+ *     responses:
+ *       200:
+ *         description: Correo enviado con el código de recuperación
+ *       404:
+ *         description: Usuario no encontrado
+ *       500:
+ *         description: Error del servidor
+ */
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Restablecer la contraseña con código
+ *     tags: [Auth]
+ *     requestBody:
+ *       description: Datos para restablecer la contraseña
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - correo
+ *               - codigo
+ *               - nuevaPassword
+ *             properties:
+ *               correo:
+ *                 type: string
+ *               codigo:
+ *                 type: integer
+ *                 example: 123456
+ *               nuevaPassword:
+ *                 type: string
+ *                 example: nueva123
+ *     responses:
+ *       200:
+ *         description: Contraseña restablecida
+ *       400:
+ *         description: Código inválido o faltan datos
+ *       404:
+ *         description: Usuario no encontrado
  *       500:
  *         description: Error del servidor
  */
