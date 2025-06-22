@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.js';
+import { enviarCodigoRecuperacion } from '../services/emailService.js';
 
 const generarAccessToken = (payload) =>
   jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '15m' });
@@ -120,4 +121,62 @@ export const verificarToken = (req, res, next) => {
     req.user = user;
     next();
   });
+};
+
+export const sendRecoveryCode = async (req, res) => {
+  const { correo } = req.body;
+
+  if (!correo) return res.status(400).json({ message: 'Correo requerido' });
+
+  try {
+    const [[usuario]] = await pool.query('SELECT id FROM usuarios WHERE correo = ?', [correo]);
+    if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const code = Math.floor(100000 + Math.random() * 900000);
+
+    await pool.query('DELETE FROM password_resets WHERE usuario_id = ?', [usuario.id]);
+    await pool.query(
+      `INSERT INTO password_resets (usuario_id, codigo, expira_en)
+       VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 15 MINUTE))`,
+      [usuario.id, code]
+    );
+
+    await enviarCodigoRecuperacion(correo, code);
+
+    res.json({ message: 'Código de recuperación enviado' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { correo, codigo, nuevaPassword } = req.body;
+
+  if (!correo || !codigo || !nuevaPassword)
+    return res.status(400).json({ message: 'Faltan datos' });
+
+  try {
+    const [[usuario]] = await pool.query('SELECT id FROM usuarios WHERE correo = ?', [correo]);
+    if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const [rows] = await pool.query(
+      `SELECT * FROM password_resets
+       WHERE usuario_id = ? AND codigo = ? AND expira_en > NOW()
+       LIMIT 1`,
+      [usuario.id, codigo]
+    );
+
+    if (rows.length === 0)
+      return res.status(400).json({ message: 'Código inválido o expirado' });
+
+    const passwordHash = await bcrypt.hash(nuevaPassword, 10);
+    await pool.query('UPDATE usuarios SET password_hash = ? WHERE id = ?', [passwordHash, usuario.id]);
+    await pool.query('DELETE FROM password_resets WHERE usuario_id = ?', [usuario.id]);
+
+    res.json({ message: 'Contraseña actualizada correctamente' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error del servidor' });
+  }
 };

@@ -47,17 +47,23 @@ npm install
 
 # Crear archivo .env
 cp .env.example .env
-# Edita .env con tus credenciales de base de datos y JWT_SECRET
+# Edita `.env` con tus credenciales de base de datos, JWT y correo
 ```
 
 ### 🔑 Archivo `.env` de ejemplo
 
 ```
-DB_HOST=mysql://usuario:password@localhost:3306/nombre_db
+DB_HOST=localhost
 DB_USER=user
 DB_PASSWORD=pass
-DB_NAME=nombre db
+DB_NAME=nombre_db
 JWT_SECRET=secreto_super_seguro
+REFRESH_TOKEN_SECRET=otro_secreto
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=usuario@example.com
+SMTP_PASS=clave
+SMTP_FROM="Sistema Agricola <no-reply@example.com>"
 ```
 
 ---
@@ -90,6 +96,7 @@ Aquí puedes explorar y probar todos los endpoints.
 * Asignación de contratos y pulseras a trabajadores
 * Registros de asistencia y procesos diarios
 * Generación de reportes en PDF
+* Recuperación de contraseña vía código enviado por email
 * Panel Swagger interactivo para pruebas
 
 ---
